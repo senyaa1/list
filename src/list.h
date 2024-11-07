@@ -17,7 +17,8 @@ typedef enum list_status
 	LIST_ERR_EMPTY		= (2 << 1),
 	LIST_ERR_NOTFOUND	= (3 << 1),
 	LIST_ERR_ARGNULL	= (4 << 1),
-	
+	LIST_ERR_FREESTACK	= (5 << 1),
+	LIST_ERR_NOTLINKED	= (6 << 1),
 } list_status_t;
 
 typedef struct list_elem

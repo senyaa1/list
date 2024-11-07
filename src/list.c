@@ -93,7 +93,18 @@ list_elem_t* list_end(list_t* list)
 
 list_status_t list_chk(list_t* list)
 {
+	if(!list->elements)		return LIST_ERR_ALLOC;
+	if(list->cnt > list->size)	return LIST_ERR_ALLOC;
+
+	if(stack_chk(&list->free))	return LIST_ERR_FREESTACK;
+
+	for(list_elem_t elem = *list_begin(list); list_next(list, &elem) != 0; elem = *list_next(list, &elem))
+	{
+		if(elem.prev == elem.next) return LIST_ERR_NOTLINKED;
+	}
+
 	
+	return LIST_OK;
 }
 
 list_status_t list_dump(list_t* list)
