@@ -120,14 +120,12 @@ list_status_t list_dump(list_t* list)
 	for(int i = 1; i <= list->size; i++)
 	{
 		list_elem_t elem = list->elements[i];
-
 		if(!elem.used)
 			fprintf(dot_file, "\"_%d\"[color=\"#444444\";fontcolor=\"#888888\";label=\"%d\"];\n", i, i);
 		else
 			fprintf(dot_file, "\"%d\"[color=\"#FFFFFF\";fontcolor=\"#FFFFFF\";label=\"val: %d | ind: %d \"];\n", i, elem.data, i);
 	}
 
-	// for(list_elem_t elem = *list_begin(list); list_next(list, &elem) != 0; elem = *list_next(list, &elem))
 	
 	// used nodes
 	for(int i = 0; i < list->size; i++)
@@ -145,7 +143,37 @@ list_status_t list_dump(list_t* list)
 
 		if(list_prev(list, &elem) != 0)
 			fprintf(dot_file, "\"%d\" -> \"%d\"[color=red; fontcolor=\"red\"];\n", i, list->elements[i].prev);
+
+
 	}
+
+	fprintf(dot_file, "\"physical_0\"[style=filled; color=\"#FFFFFF\";fontcolor=\"#000000\";label=\"head\"];\n");
+	fprintf(dot_file, "\"physical_free\"[style=filled; color=\"#FFFFFF\";fontcolor=\"#000000\";label=\"free\"];\n");
+	fprintf(dot_file, "\"physical_free\" -> \"physical_%d\"[color=gray];\n", list->free);
+
+	for(int i = 1; i <= list->size; i++)
+	{
+		if(list->elements[i].used)
+			fprintf(dot_file, "\"physical_%d\"[color=\"#FFFFFF\";fontcolor=\"#FFFFFF\";label=\"val: %d | ind: %d\"];\n", i, list->elements[i].data, i);
+		else
+			fprintf(dot_file, "\"physical_%d\"[color=\"#444444\";fontcolor=\"#888888\";label=\"%d\"];\n", i, i);
+
+		fprintf(dot_file, "\"physical_%d\" -> \"physical_%d\"[color=invis; thickness=1000; weight=\"10000\"];\n", i - 1, i);
+	}
+
+	for(int i = 1; i < list->size; i++)
+	{
+		if(!list->elements[i].used)
+		{
+			fprintf(dot_file, "\"physical_%d\" -> \"physical_%d\"[color=gray];\n", i, list->elements[i].next);
+		}
+		else
+		{
+			fprintf(dot_file, "\"physical_%d\" -> \"physical_%d\"[color=green];\n", list->elements[i].next, i);
+			fprintf(dot_file, "\"physical_%d\" -> \"physical_%d\"[color=red];\n", list->elements[i].prev, i);
+		}
+	}
+
 
 	fprintf(dot_file, "}\n");
 	fclose(dot_file);

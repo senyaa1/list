@@ -6,7 +6,7 @@
 int main()
 {
 	list_t list = { 0 };
-	list_ctor(&list, 32);
+	list_ctor(&list, 16);
 
 	list_insert_head(&list, 0);
 
