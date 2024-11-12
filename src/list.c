@@ -147,7 +147,7 @@ list_status_t list_dump(list_t* list)
 
 	}
 
-	fprintf(dot_file, "\"physical_0\"[style=filled; color=\"#FFFFFF\";fontcolor=\"#000000\";label=\"head\"];\n");
+	fprintf(dot_file, "\"physical_0\"[style=filled; color=\"#FFFFFF\";fontcolor=\"#000000\";label=\"root\"];\n");
 	fprintf(dot_file, "\"physical_free\"[style=filled; color=\"#FFFFFF\";fontcolor=\"#000000\";label=\"free\"];\n");
 	fprintf(dot_file, "\"physical_free\" -> \"physical_%d\"[color=gray];\n", list->free);
 
@@ -169,8 +169,8 @@ list_status_t list_dump(list_t* list)
 		}
 		else
 		{
-			fprintf(dot_file, "\"physical_%d\" -> \"physical_%d\"[color=green];\n", list->elements[i].next, i);
-			fprintf(dot_file, "\"physical_%d\" -> \"physical_%d\"[color=red];\n", list->elements[i].prev, i);
+			fprintf(dot_file, "\"physical_%d\" -> \"physical_%d\"[color=red];\n", list->elements[i].next, i);
+			fprintf(dot_file, "\"physical_%d\" -> \"physical_%d\"[color=green];\n", list->elements[i].prev, i);
 		}
 	}
 
