@@ -38,7 +38,6 @@ list_status_t list_ctor(list_t* list, size_t initial_size)
 	for(int i = 1; i < initial_size; i++)
 	{
 		list->elements[i].next = i + 1;
-		printf("%d ", list->elements[i].next);
 		list->elements[i].prev = 0;
 	}
 
@@ -248,4 +247,33 @@ list_status_t list_remove_tail(list_t* list)
 {
 	return list_remove_at(list, list->elements[0].prev);
 }
+
+int list_find_val(list_t* list, list_data_t val)
+{
+	int counter = 0;
+	int cur = list->elements[0].next, end = list->elements[0].prev;
+	
+	while(cur != end)
+	{
+		cur = list->elements[cur].next;
+		if(list->elements[cur].data == val) return cur;
+	}
+
+
+	return -1;
+}
+
+int list_index(list_t* list, int index)
+{
+	int counter = 0, elem = list->elements[0].next;
+	
+	while(elem != list->elements[0].prev)
+	{
+		counter++;
+		if(counter == index) return counter;
+	}
+
+	return -1;
+}
+
 

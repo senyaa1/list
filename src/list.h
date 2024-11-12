@@ -58,3 +58,6 @@ list_status_t list_remove_tail(list_t* list);
 
 list_status_t list_chk(list_t* list);
 list_status_t list_dump(list_t* list);
+
+int list_find_val(list_t* list, list_data_t val);
+int list_index(list_t* list, int index);
