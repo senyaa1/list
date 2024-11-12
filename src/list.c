@@ -5,6 +5,10 @@
 
 #include "list.h"
 #include "stack.h"
+/*
+	- free nodes
+		- colored nodes
+*/
 
 static list_status_t list_increase_alloc(list_t* list)
 {
@@ -34,21 +38,19 @@ list_status_t list_ctor(list_t* list, size_t initial_size)
 	list->size = initial_size;
 	list->elements = (list_elem_t*)calloc(list->size + 1, sizeof(list_elem_t));
 	list->cnt = 0;
-	list->free = (stack_t){0};
-	STACK_INIT(&list->free, sizeof(int), initial_size);
 
-	for(int i = initial_size - 1; i > 0; i--)
+	for(int i = 1; i < initial_size; i++)
 	{
-		stack_push(&list->free, &i);
-		list->elements[i].next = 0;
+		list->elements[i].next = i + 1;
+		printf("%d ", list->elements[i].next);
 		list->elements[i].prev = 0;
 	}
 
 	list->elements[0].data = 0xbabecafe;
 	list->elements[0].next = 0;
 	list->elements[0].prev = 0;
-
 	list->elements[0].used = 1;
+	list->free = 1;
 
 	return LIST_OK;
 }
@@ -56,8 +58,6 @@ list_status_t list_ctor(list_t* list, size_t initial_size)
 list_status_t list_dtor(list_t* list)
 {
 	if(!list) return LIST_ERR_ARGNULL;
-
-	stack_dtor(&list->free);
 
 	free(list->elements);
 	memset(list, 0, sizeof(list_t));
@@ -96,11 +96,12 @@ list_status_t list_chk(list_t* list)
 	if(!list->elements)		return LIST_ERR_ALLOC;
 	if(list->cnt > list->size)	return LIST_ERR_ALLOC;
 
-	if(stack_chk(&list->free))	return LIST_ERR_FREESTACK;
-
-	for(list_elem_t elem = *list_begin(list); list_next(list, &elem) != 0; elem = *list_next(list, &elem))
+	// for(list_elem_t elem = *list_begin(list); list_next(list, &elem) != 0; elem = *list_next(list, &elem))
+	for(int i = 0; i < list->size; i++)
 	{
+		list_elem_t elem = list->elements[i];
 		if(elem.prev == elem.next) return LIST_ERR_NOTLINKED;
+		if(i != list->elements[elem.next].prev && elem.used) return LIST_ERR_NOTLINKED;
 	}
 
 	
@@ -113,27 +114,48 @@ list_status_t list_dump(list_t* list)
 
 	fprintf(dot_file, "digraph G {\n");
 	fprintf(dot_file, "node [shape=box];\n");
-	fprintf(dot_file, "rankdir=LR;\n");
+	fprintf(dot_file, "rankdir=LR;\n") ;
+	fprintf(dot_file, "bgcolor=\"grey12\";\n");
 
-	for(int i = 0; i <= list->size; i++)
+	fprintf(dot_file, "\"%d\"[color=\"#FF00FF\";fontcolor=\"#FF00FF\";label=\"root\"];\n", 0xbabecafe);
+
+	// fprintf(dot_file, "subgraph free_cluster {\n");
+	// fprintf(dot_file, "}\n");
+	//
+	fprintf(dot_file, "\"free\"[color=\"#FF00FF\";fontcolor=\"#FF00FF\";label=\"free\"];\n");
+	fprintf(dot_file, "\"free\" -> \"_%d\"[color=\"#444444\"; fontcolor=\"green\"];\n", list->free);
+
+	for(int i = 1; i <= list->size; i++)
 	{
 		list_elem_t elem = list->elements[i];
-		if(!elem.used) continue;
-
-		fprintf(dot_file, "\"%d\";\n", elem.data);
+		if(!elem.used)
+			fprintf(dot_file, "\"_%d\"[color=\"#444444\";fontcolor=\"#888888\";label=\"%d\"];\n", i, i);
+		else
+			fprintf(dot_file, "\"%d\"[color=\"#FFFFFF\";fontcolor=\"#FFFFFF\"];\n", elem.data);
 	}
 
 	// for(list_elem_t elem = *list_begin(list); list_next(list, &elem) != 0; elem = *list_next(list, &elem))
-	for(int i = 0; i <= list->size; i++)
+	
+	// used nodes
+	for(int i = 0; i < list->size; i++)
 	{
 		list_elem_t elem = list->elements[i];
-		if(!elem.used) continue;
+
+		if(!elem.used)
+		{
+			fprintf(dot_file, "\"_%d\" -> \"_%d\"[color=\"#444444\"; fontcolor=\"green\"];\n", i, list->elements[i].next);
+			continue;
+		}
 
 		if(list_next(list, &elem) != 0)
-			fprintf(dot_file, "\"%d\" -> \"%d\"[color=green];\n", elem.data, list_next(list, &elem)->data);
+		{
+			fprintf(dot_file, "\"%d\" -> \"%d\"[color=green; fontcolor=\"green\"];\n", elem.data, list_next(list, &elem)->data);
+		}
 
 		if(list_prev(list, &elem) != 0)
-			fprintf(dot_file, "\"%d\" -> \"%d\"[color=red];\n", elem.data, list_prev(list, &elem)->data);
+		{
+			fprintf(dot_file, "\"%d\" -> \"%d\"[color=red; fontcolor=\"red\"];\n", elem.data, list_prev(list, &elem)->data);
+		}
 	}
 
 	fprintf(dot_file, "}\n");
@@ -172,10 +194,11 @@ list_status_t list_insert_before(list_t* list, int index, list_data_t data)
 	if(list_maybe_increase_alloc(list)) 
 		return LIST_ERR_ALLOC;
 
-	int insertion_index = 0;
-	stack_pop(&list->free, &insertion_index);
+	int insertion_index = list->free;
+	list->free = list->elements[insertion_index].next;
 
 	list_elem_t* elem = &list->elements[insertion_index];
+
 	elem->data = data;
 	elem->used = true;
 
@@ -193,41 +216,6 @@ list_status_t list_insert_before(list_t* list, int index, list_data_t data)
 	return LIST_OK;
 }
 
-list_status_t list_insert_after(list_t* list, int index, list_data_t data)
-{
-	if(list_maybe_increase_alloc(list)) 
-		return LIST_ERR_ALLOC;
-
-	int insertion_index = 0;
-	stack_pop(&list->free, &insertion_index);
-
-	list_elem_t* elem = &list->elements[insertion_index];
-	elem->data = data;
-	elem->used = true;
-
-	list_elem_t* prev = &list->elements[index];
-	list_elem_t* next = &list->elements[prev->next];
-
-	elem->next = prev->next;
-	elem->prev = index;
-
-	prev->next = insertion_index;
-	next->prev = insertion_index;
-
-	list->cnt++;
-
-	return LIST_OK;
-}
-
-list_status_t list_insert_head(list_t* list, list_data_t data)
-{
-	return list_insert_before(list, list->elements[0].next, data);
-}
-
-list_status_t list_insert_tail(list_t* list, list_data_t data)
-{
-	return list_insert_after(list, list->elements[0].prev, data);
-}
 
 list_status_t list_remove_at(list_t* list, int index)
 {
@@ -238,11 +226,27 @@ list_status_t list_remove_at(list_t* list, int index)
 
 	memset(elem, 0, sizeof(list_elem_t));
 
-	stack_push(&list->free, &index);
+	elem->next = list->free;
+	list->free = index;
 
 	list->cnt--;
 
 	return LIST_OK;
+}
+
+list_status_t list_insert_after(list_t* list, int index, list_data_t data)
+{
+	return list_insert_before(list, list->elements[index].next, data);
+}
+
+list_status_t list_insert_head(list_t* list, list_data_t data)
+{
+	return list_insert_before(list, list->elements[0].next, data);
+}
+
+list_status_t list_insert_tail(list_t* list, list_data_t data)
+{
+	return list_insert_after(list, list->elements[0].prev, data);
 }
 
 list_status_t list_remove_head(list_t* list)

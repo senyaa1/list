@@ -34,7 +34,7 @@ typedef struct list
 	list_elem_t* elements;
 	size_t size;
 	size_t cnt;
-	stack_t free;
+	int free;
 	// int head;
 	// int tail;
 } list_t;

@@ -108,6 +108,7 @@ static stack_status_t increase_alloc(stack_t *stack)
 
 static stack_status_t decrease_alloc(stack_t *stack)
 {
+	return STACK_OK;
 	STACK_CHK_RET(stack)
 
 	stack->allocated_size /= 2;
