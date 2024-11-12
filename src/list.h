@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "stack.h"
-
 #define LOG_FILENAME		"log.html"
 #define GRAPH_FILENAME		"graph.png"
 #define GRAPH_SRC_FILENAME	"graph.dot"

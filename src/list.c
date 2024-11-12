@@ -4,11 +4,7 @@
 #include <unistd.h>
 
 #include "list.h"
-#include "stack.h"
-/*
-	- free nodes
-		- colored nodes
-*/
+
 
 static list_status_t list_increase_alloc(list_t* list)
 {
@@ -113,25 +109,23 @@ list_status_t list_dump(list_t* list)
 	FILE *dot_file = fopen(GRAPH_SRC_FILENAME, "w");
 
 	fprintf(dot_file, "digraph G {\n");
-	fprintf(dot_file, "node [shape=box];\n");
+	fprintf(dot_file, "node [shape=Mrecord];\n");
 	fprintf(dot_file, "rankdir=LR;\n") ;
 	fprintf(dot_file, "bgcolor=\"grey12\";\n");
 
-	fprintf(dot_file, "\"%d\"[color=\"#FF00FF\";fontcolor=\"#FF00FF\";label=\"root\"];\n", 0xbabecafe);
+	fprintf(dot_file, "\"0\"[style=\"filled\";color=\"#FFFFFF\";fontcolor=\"#000000\";label=\"root\"];\n");
 
-	// fprintf(dot_file, "subgraph free_cluster {\n");
-	// fprintf(dot_file, "}\n");
-	//
-	fprintf(dot_file, "\"free\"[color=\"#FF00FF\";fontcolor=\"#FF00FF\";label=\"free\"];\n");
+	fprintf(dot_file, "\"free\"[style=\"filled\";color=\"#FFFFFF\";fontcolor=\"#000000\";label=\"free\"];\n");
 	fprintf(dot_file, "\"free\" -> \"_%d\"[color=\"#444444\"; fontcolor=\"green\"];\n", list->free);
 
 	for(int i = 1; i <= list->size; i++)
 	{
 		list_elem_t elem = list->elements[i];
+
 		if(!elem.used)
 			fprintf(dot_file, "\"_%d\"[color=\"#444444\";fontcolor=\"#888888\";label=\"%d\"];\n", i, i);
 		else
-			fprintf(dot_file, "\"%d\"[color=\"#FFFFFF\";fontcolor=\"#FFFFFF\"];\n", elem.data);
+			fprintf(dot_file, "\"%d\"[color=\"#FFFFFF\";fontcolor=\"#FFFFFF\";label=\"val: %d | ind: %d \"];\n", i, elem.data, i);
 	}
 
 	// for(list_elem_t elem = *list_begin(list); list_next(list, &elem) != 0; elem = *list_next(list, &elem))
@@ -148,14 +142,10 @@ list_status_t list_dump(list_t* list)
 		}
 
 		if(list_next(list, &elem) != 0)
-		{
-			fprintf(dot_file, "\"%d\" -> \"%d\"[color=green; fontcolor=\"green\"];\n", elem.data, list_next(list, &elem)->data);
-		}
+			fprintf(dot_file, "\"%d\" -> \"%d\"[color=green; fontcolor=\"green\"];\n", i, list->elements[i].next);
 
 		if(list_prev(list, &elem) != 0)
-		{
-			fprintf(dot_file, "\"%d\" -> \"%d\"[color=red; fontcolor=\"red\"];\n", elem.data, list_prev(list, &elem)->data);
-		}
+			fprintf(dot_file, "\"%d\" -> \"%d\"[color=red; fontcolor=\"red\"];\n", i, list->elements[i].prev);
 	}
 
 	fprintf(dot_file, "}\n");
