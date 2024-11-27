@@ -6,7 +6,7 @@
 int main()
 {
 	list_t list = { 0 };
-	list_ctor(&list, 16);
+	list_ctor(&list, 32);
 
 	list_insert_head(&list, 0);
 
@@ -27,6 +27,9 @@ int main()
 
 	list_remove_at(&list, 1);
 
+	list_remove_at(&list, 5);
+
+	// list.elements[7].next = 3;
 
 	list_dump(&list);
 

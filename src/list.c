@@ -121,9 +121,9 @@ list_status_t list_dump(list_t* list)
 	{
 		list_elem_t elem = list->elements[i];
 		if(!elem.used)
-			fprintf(dot_file, "\"_%d\"[color=\"#444444\";fontcolor=\"#888888\";label=\"%d\"];\n", i, i);
+			fprintf(dot_file, "\"_%d\"[color=\"#444444\";fontcolor=\"#888888\";label=\"ind: %d | val: %d | next: %d | prev: %d \"];\n", i, i, elem.data, elem.next, elem.prev);
 		else
-			fprintf(dot_file, "\"%d\"[color=\"#FFFFFF\";fontcolor=\"#FFFFFF\";label=\"val: %d | ind: %d \"];\n", i, elem.data, i);
+			fprintf(dot_file, "\"%d\"[color=\"#FFFFFF\";fontcolor=\"#FFFFFF\";label=\"ind: %d | val: %d | next: %d | prev: %d \"];\n", i, i, elem.data, elem.next, elem.prev);
 	}
 
 	
@@ -154,9 +154,9 @@ list_status_t list_dump(list_t* list)
 	for(int i = 1; i <= list->size; i++)
 	{
 		if(list->elements[i].used)
-			fprintf(dot_file, "\"physical_%d\"[color=\"#FFFFFF\";fontcolor=\"#FFFFFF\";label=\"val: %d | ind: %d\"];\n", i, list->elements[i].data, i);
+			fprintf(dot_file, "\"physical_%d\"[color=\"#FFFFFF\";fontcolor=\"#FFFFFF\";label=\"ind: %d | val: %d | next: %d | prev: %d\"];\n", i, i, list->elements[i].data, list->elements[i].next, list->elements[i].prev);
 		else
-			fprintf(dot_file, "\"physical_%d\"[color=\"#444444\";fontcolor=\"#888888\";label=\"%d\"];\n", i, i);
+			fprintf(dot_file, "\"physical_%d\"[color=\"#444444\";fontcolor=\"#888888\";label=\"ind: %d | val: %d | next: %d | prev: %d\"];\n", i, i, list->elements[i].data, list->elements[i].next, list->elements[i].prev);
 
 		fprintf(dot_file, "\"physical_%d\" -> \"physical_%d\"[color=invis; thickness=1000; weight=\"10000\"];\n", i - 1, i);
 	}
@@ -169,8 +169,16 @@ list_status_t list_dump(list_t* list)
 		}
 		else
 		{
-			fprintf(dot_file, "\"physical_%d\" -> \"physical_%d\"[color=red];\n", list->elements[i].next, i);
-			fprintf(dot_file, "\"physical_%d\" -> \"physical_%d\"[color=green];\n", list->elements[i].prev, i);
+			if(i == list->elements[list->elements[i].next].prev)
+			{
+				fprintf(dot_file, "\"physical_%d\" -> \"physical_%d\"[color=cyan];\n", i, list->elements[i].next);
+			}
+			else
+			{
+				fprintf(dot_file, "\"physical_%d\" -> \"physical_%d\"[color=red;style=bold];\n", list->elements[i].next, i);
+				fprintf(dot_file, "\"physical_%d\" -> \"physical_%d\"[color=green;style=bold];\n", list->elements[i].prev, i);
+			}
+			
 		}
 	}
 
